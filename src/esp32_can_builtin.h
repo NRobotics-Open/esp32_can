@@ -40,7 +40,7 @@
 #include "driver/adc.h"
 #include "esp_system.h"
 #include "esp_adc_cal.h"
-#include "driver/twai.h"
+#include "esp32_can_builtin_lowlevel.h"
 
 //#define DEBUG_SETUP
 #define BI_NUM_FILTERS 32
@@ -55,12 +55,6 @@ typedef struct
   bool extended;
   bool configured;
 } ESP32_FILTER;
-
-typedef struct
-{
-    twai_timing_config_t cfg;
-    uint32_t speed;
-} VALID_TIMING;
 
 class ESP32CAN : public CAN_COMMON
 {
@@ -84,23 +78,24 @@ public:
   void setRXBufferSize(int newSize);
   uint16_t available(); //like rx_avail but returns the number of waiting frames
   uint32_t get_rx_buff(CAN_FRAME &msg);
-  bool processFrame(twai_message_t &frame);
+  bool processFrame(CAN_frame_t &frame);
   void sendCallback(CAN_FRAME *frame);
 
   void setCANPins(gpio_num_t rxPin, gpio_num_t txPin);
 
   friend void CAN_WatchDog_Builtin( void *pvParameters );
-  friend void task_LowLevelRX(void *pvParameters);
+
 
 protected:
   bool initializedResources;
-  bool readyForTraffic;
   int cyclesSinceTraffic;
 
 private:
   // Pin variables
   ESP32_FILTER filters[BI_NUM_FILTERS];
+  int txBufferSize;
   int rxBufferSize;
+  
 };
 
 extern QueueHandle_t callbackQueue;
